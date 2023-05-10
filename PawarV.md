@@ -41,8 +41,17 @@ zincrby pvm:wHg:2020-02-01:1 50 Ana
 zremrangebyscore pvm:wHg:2020-02-01:1 0 100
 ```
 
+# Challenge 2
 ```
 metric:[unit-name]:[year-month-day]:[siteId]
+
+metric:wHg:2020-02-01:1 0 18:1 1 18.5:1 2 19:3  3 18:3
+
+mvn test -Dtest=MetricDaoRedisZsetImplTest
+mvn package
+java -jar target/redisolar-1.0.jar load
+java -jar target/redisolar-1.0.jar server config.yml
+
 
 ```
 >[Home](HOME.md)
