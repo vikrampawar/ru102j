@@ -3,6 +3,7 @@ package com.redislabs.university.RU102J.examples;
 import com.redislabs.university.RU102J.HostPort;
 import org.junit.*;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Tuple;
 
 import java.util.*;
 
@@ -25,7 +26,7 @@ public class JedisBasicsTest {
         if (HostPort.getRedisPassword().length() > 0) {
             jedis.auth(HostPort.getRedisPassword());
         }
-        
+
         jedis.del("planets");
         jedis.del("earth");
     }
@@ -122,5 +123,51 @@ public class JedisBasicsTest {
         // Test that we can get a single property.
         String diameter = jedis.hget("earth", "diameterKM");
         assertThat(diameter, is(earthProperties.get("diameterKM")));
+    }
+
+    @Test
+    public void testSortedSet() {
+        Map<String, Double> scores = new HashMap<>();
+        scores.put("Azar", 100.0);
+        scores.put("Bobby", 90.0);
+        scores.put("Cindy", 80.0);
+
+        // Add all the scores to the sorted set.
+        for (Map.Entry<String, Double> score : scores.entrySet()) {
+            jedis.zadd("scores", score.getValue(), score.getKey());
+        }
+
+        // Get the scores back, sorted by score.
+        Set<Tuple> sortedScores = jedis.zrangeWithScores("scores", 0, 0);
+
+
+        // We expect only the lowest score to be returned.
+        sortedScores.forEach(score -> {
+            assertThat(score.getElement(), is("Cindy"));
+            assertThat(score.getScore(), is(80.0));
+        });
+
+        // Get the scores back, sorted by score, descending.
+        sortedScores = jedis.zrevrangeWithScores("scores", 0, 0);
+
+        // We expect only the highest score to be returned.
+        sortedScores.forEach(score -> {
+            assertThat(score.getElement(), is("Azar"));
+            assertThat(score.getScore(), is(100.0));
+        });
+
+        // rank
+        Long rank = jedis.zrank("scores", "Azar");
+
+        // higher score should have a higher rank
+        assertThat(rank, is(2L));
+
+        // reverse rank
+        Long reverseRank = jedis.zrevrank("scores", "Azar");
+
+        // higher score should lower reverse rank
+        assertThat(reverseRank, is(0L));
+
+
     }
 }
